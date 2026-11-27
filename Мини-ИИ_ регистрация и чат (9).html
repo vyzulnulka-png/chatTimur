@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Мини-ИИ: регистрация и чат</title>
+<style>
+:root{--bg:#f4f5fb;--card:#fff;--text:#1c1d2b;--muted:#6b6e85;--accent:#5b5bd6;--accent-t:#fff;--bubble-ai:#eceefc;--border:#dcdef0;--err:#c62828;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14151f;--card:#1e2030;--text:#eceefc;--muted:#9a9db8;--accent:#8c8cff;--accent-t:#14151f;--bubble-ai:#2a2d44;--border:#34375252;--err:#ff8a80;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#14151f;--card:#1e2030;--text:#eceefc;--muted:#9a9db8;--accent:#8c8cff;--accent-t:#14151f;--bubble-ai:#2a2d44;--border:#343752;--err:#ff8a80;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
+*{box-sizing:border-box}
+body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;display:flex;justify-content:center;align-items:center}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;width:min(420px,94vw)}
+h1{font-size:22px;margin:0 0 4px}.sub{color:var(--muted);font-size:14px;margin:0 0 18px}
+label{display:block;font-size:13px;color:var(--muted);margin:12px 0 4px}
+input{width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:16px}
+input:focus{outline:2px solid var(--accent);border-color:transparent}
+button{cursor:pointer;border:0;border-radius:10px;padding:12px 16px;font-size:16px;background:var(--accent);color:var(--accent-t);font-weight:600}
+.full{width:100%;margin-top:18px}
+.link{background:none;color:var(--accent);padding:0;font-size:14px;font-weight:500}
+.switch{text-align:center;margin-top:14px;font-size:14px;color:var(--muted)}
+.err{color:var(--err);font-size:13px;min-height:18px;margin-top:10px}
+#chat{width:min(720px,100vw);height:100%;display:flex;flex-direction:column;background:var(--card)}
+.top{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border)}
+.top b{font-size:16px}.top small{color:var(--muted);display:block}
+.top button{background:var(--bubble-ai);color:var(--text);padding:8px 12px;font-size:14px}
+#msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px}
+.m{max-width:82%;padding:10px 14px;border-radius:16px;line-height:1.45;white-space:pre-wrap;word-wrap:break-word}
+.ai{background:var(--bubble-ai);align-self:flex-start;border-bottom-left-radius:4px}
+.me{background:var(--accent);color:var(--accent-t);align-self:flex-end;border-bottom-right-radius:4px}
+.row{display:flex;gap:8px;padding:12px;border-top:1px solid var(--border)}
+.row input{flex:1}
+.chips{display:flex;gap:6px;flex-wrap:wrap;padding:0 12px 8px}
+.chips button{background:var(--bubble-ai);color:var(--text);font-size:13px;padding:6px 10px;font-weight:500}
+.hide{display:none!important}
+.tb{display:flex;gap:8px}
+
+@keyframes pop{from{opacity:0;transform:translateY(10px) scale(.95)}to{opacity:1;transform:none}}
+@keyframes rise{from{opacity:0;transform:translateY(22px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes dot{0%,80%,100%{opacity:.3;transform:translateY(0)}40%{opacity:1;transform:translateY(-5px)}}
+@keyframes bg{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+@keyframes shake{10%,90%{transform:translateX(-2px)}20%,80%{transform:translateX(4px)}30%,50%,70%{transform:translateX(-6px)}40%,60%{transform:translateX(6px)}}
+body{background:linear-gradient(120deg,var(--bg),color-mix(in srgb,var(--accent) 16%,var(--bg)),var(--bg));background-size:300% 300%;animation:bg 14s ease infinite}
+.card{animation:rise .6s cubic-bezier(.2,.8,.2,1)}
+.card.sw{animation:fade .35s ease-out}
+#chat{animation:rise .5s cubic-bezier(.2,.8,.2,1)}
+.m{animation:pop .3s cubic-bezier(.2,.8,.2,1)}
+.typing i{display:inline-block;width:7px;height:7px;margin:3px 2px;border-radius:50%;background:var(--muted);animation:dot 1.1s infinite}
+.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+button{transition:transform .15s,filter .15s}
+button:hover{transform:translateY(-2px);filter:brightness(1.1)}
+button:active{transform:scale(.95)}
+input{transition:box-shadow .2s,border-color .2s}
+input:focus{box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 25%,transparent)}
+.err:not(:empty){animation:shake .4s}
+.chips button{animation:fade .45s backwards}
+.chips button:nth-child(2){animation-delay:.06s}.chips button:nth-child(3){animation-delay:.12s}.chips button:nth-child(4){animation-delay:.18s}.chips button:nth-child(5){animation-delay:.24s}.chips button:nth-child(6){animation-delay:.3s}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="card" id="auth">
+  <h1 id="t">Регистрация</h1>
+  <p class="sub" id="s">Создайте аккаунт, чтобы пообщаться с ИИ</p>
+  <div id="nameBox"><label for="name">Имя</label><input id="name" autocomplete="name"></div>
+  <label for="email">Email</label><input id="email" type="email" autocomplete="email">
+  <label for="pass">Пароль (от 6 символов)</label><input id="pass" type="password" autocomplete="current-password">
+  <div class="err" id="err"></div>
+  <button class="full" id="go">Зарегистрироваться</button>
+  <div class="switch"><span id="q">Уже есть аккаунт?</span> <button class="link" id="sw">Войти</button></div>
+</div>
+
+<div id="chat" class="hide">
+  <div class="top"><div><b>Мини-ИИ</b><small id="who"></small></div><div class="tb"><button id="out">Выйти</button></div></div>
+  
+  <div id="msgs"></div>
+  <div class="chips" id="chips"></div>
+  <div class="row"><input id="inp" placeholder="Напишите сообщение…" autocomplete="off"><button id="send">→</button></div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+let mode='reg';
+function store(k,v){try{if(v===undefined)return JSON.parse(localStorage.getItem(k));localStorage.setItem(k,JSON.stringify(v))}catch(e){return null}}
+const mem={users:{},session:null};
+function getUsers(){return store('users')||mem.users}
+function saveUsers(u){mem.users=u;store('users',u)}
+async function hash(s){try{const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}catch(e){return btoa(unescape(encodeURIComponent(s)))}}
+
+function setMode(m){mode=m;const reg=m==='reg';const ca=$('auth');ca.classList.remove('sw');void ca.offsetWidth;ca.classList.add('sw');
+ $('t').textContent=reg?'Регистрация':'Вход';
+ $('s').textContent=reg?'Создайте аккаунт, чтобы пообщаться с ИИ':'Рады видеть вас снова';
+ $('nameBox').classList.toggle('hide',!reg);
+ $('go').textContent=reg?'Зарегистрироваться':'Войти';
+ $('q').textContent=reg?'Уже есть аккаунт?':'Нет аккаунта?';
+ $('sw').textContent=reg?'Войти':'Регистрация';$('err').textContent='';}
+$('sw').onclick=()=>setMode(mode==='reg'?'login':'reg');
+
+$('go').onclick=async()=>{
+ const name=$('name').value.trim(),email=$('email').value.trim().toLowerCase(),pass=$('pass').value,err=$('err');
+ if(!/^\S+@\S+\.\S+$/.test(email)){err.textContent='Введите корректный email';return}
+ if(pass.length<6){err.textContent='Пароль должен быть не короче 6 символов';return}
+ const users=getUsers(),h=await hash(pass);
+ if(mode==='reg'){
+  if(!name){err.textContent='Введите имя';return}
+  if(users[email]){err.textContent='Такой email уже зарегистрирован';return}
+  users[email]={name,h};saveUsers(users);enter(email,name);
+ }else{
+  const u=users[email];
+  if(!u||u.h!==h){err.textContent='Неверный email или пароль';return}
+  enter(email,u.name);
+ }
+};
+['name','email','pass'].forEach(i=>$(i).addEventListener('keydown',e=>{if(e.key==='Enter')$('go').click()}));
+
+let me='';
+function enter(email,name){me=name;mem.session=email;store('session',email);
+ $('auth').classList.add('hide');$('chat').classList.remove('hide');
+ $('who').textContent=name+' · '+email;$('msgs').innerHTML='';
+ add('ai','Привет, '+name+'! Простые вопросы я решаю сам, а на сложные отвечает настоящий ИИ. Спросите что угодно или посчитайте пример.');
+ $('inp').focus();}
+$('out').onclick=()=>{store('session',null);mem.session=null;$('chat').classList.add('hide');$('auth').classList.remove('hide');$('pass').value=''};
+
+function add(who,text){const d=document.createElement('div');d.className='m '+who;d.textContent=text;$('msgs').appendChild(d);$('msgs').scrollTop=1e9;}
+
+let sm,smTried=false;const hist=[];
+async function askAI(q,bubble){
+ if(!smTried){smTried=true;try{sm=(typeof claude!=='undefined'&&claude.use)?await claude.use('sample'):null}catch(e){sm=null}}
+ if(!sm)return null;
+ const dlg=hist.map(h=>(h.role==='user'?'Пользователь: ':'Ассистент: ')+h.content).join('\n');
+ const prompt='Ты — дружелюбный ассистент в чате на сайте. Собеседника зовут '+me+'. Отвечай на языке вопроса, по делу и понятно, до 8 предложений, обычным текстом без Markdown и без заголовков. Если не уверен или вопрос про свежие события, честно скажи об этом.\n\n'+(dlg?'Предыдущий диалог:\n'+dlg+'\n\n':'')+'Новый вопрос пользователя: '+q;
+ try{const r=await sm(prompt,{cache:false,modelTier:'quick',onText:({text})=>{if(!text)return;bubble.classList.remove('typing');bubble.textContent=text;$('msgs').scrollTop=1e9}});
+  if(r&&r.text){bubble.classList.remove('typing');bubble.textContent=r.text;return r.text}return null}catch(e){if(e&&e.code==='not_granted')sm=null;return null}}
+let miss=false,gq=null;
+function addLink(q){const d=document.createElement('div');d.className='m ai';const a=document.createElement('a');a.href='https://www.google.com/search?q='+encodeURIComponent(q);a.target='_blank';a.rel='noopener noreferrer';a.textContent='🔍 Искать в Google: «'+q+'»';a.style.color='var(--accent)';a.style.fontWeight='600';d.appendChild(a);$('msgs').appendChild(d);$('msgs').scrollTop=1e9;}
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const jokes=['Программист ложится спать. Жена: «Закрой окно, холодно». — «И что, от закрытия окна станет теплее?»','— Почему программисты путают Хэллоуин и Рождество? — Потому что 31 Oct = 25 Dec.','Баг — это не ошибка, а недокументированная фича.','Сколько программистов нужно, чтобы поменять лампочку? Ни одного, это аппаратная проблема.'];
+const facts=['Первый компьютерный «баг» был настоящей молью, застрявшей в реле компьютера Harvard Mark II в 1947 году.','Мёд не портится: его находили съедобным в египетских гробницах.','У осьминога три сердца и голубая кровь.','Эйфелева башня летом становится выше на несколько сантиметров из-за теплового расширения.'];
+function calc(t){
+ let e=t.toLowerCase().replace(/сколько будет|посчитай|вычисли|равно|чему|=/g,'').replace(/,/g,'.').replace(/×|х|x/g,'*').replace(/÷/g,'/').replace(/\^/g,'**').trim();
+ if(!/\d/.test(e)||!/^[\d\s+\-*/().%]+$/.test(e)||!/[+\-*/%]/.test(e))return null;
+ try{const r=Function('"use strict";return ('+e+')')();if(typeof r==='number'&&isFinite(r))return String(Math.round(r*1e9)/1e9)}catch(x){}return null}
+const CAP={"франци":"Париж","герман":"Берлин","итали":"Рим","испани":"Мадрид","росси":"Москва","сша":"Вашингтон","америк":"Вашингтон","китa":"Пекин","китай":"Пекин","япони":"Токио","азербайджан":"Баку","турци":"Анкара","великобритани":"Лондон","англи":"Лондон","украин":"Киев","казахстан":"Астана","грузи":"Тбилиси","армени":"Ереван","инди":"Нью-Дели","бразили":"Бразилиа","канад":"Оттава","австрали":"Канберра","египт":"Каир","польш":"Варшава","беларус":"Минск","иран":"Тегеран"};
+const KB=[
+["html","HTML — язык разметки: с его помощью задают структуру веб-страницы (заголовки, текст, ссылки, формы). Стили добавляет CSS, а поведение — JavaScript."],
+["css","CSS — язык стилей: отвечает за цвета, шрифты, отступы и расположение элементов на странице."],
+["javascript","JavaScript — язык программирования, который работает в браузере и делает страницы интерактивными. Его также используют на сервере (Node.js)."],
+["python","Python — простой и популярный язык программирования. Подходит для начинающих, анализа данных, автоматизации, ботов и машинного обучения."],
+["sql","SQL — язык запросов к базам данных. Основные команды: SELECT (выбрать), INSERT (добавить), UPDATE (изменить), DELETE (удалить)."],
+["что api","API — это интерфейс, через который одна программа обращается к другой: отправляет запрос и получает ответ. Например, сайт погоды берёт данные через API метеосервиса."],
+["нейросет","Нейросеть — математическая модель, вдохновлённая мозгом: много простых узлов-«нейронов» соединены связями, а при обучении подбираются веса этих связей, чтобы модель находила закономерности в данных."],
+["chatgpt","ChatGPT — чат-бот на основе большой языковой модели от OpenAI. Я — не он, а простая локальная программа в одном HTML-файле."],
+["искусственн интеллект","Искусственный интеллект — область информатики, где компьютеры решают задачи, обычно требующие человеческого мышления: распознавание речи и образов, перевод, игры, генерация текста."],
+["блокчейн","Блокчейн — цепочка блоков с записями, которая хранится на многих компьютерах сразу. Изменить старые записи практически невозможно, поэтому он используется для криптовалют и учёта."],
+["биткоин","Биткоин — первая криптовалюта, созданная в 2009 году под псевдонимом Сатоши Накамото. Работает на блокчейне без центрального банка."],
+["vpn","VPN создаёт зашифрованный туннель между вами и сервером в интернете: провайдер не видит содержимое трафика, а сайты видят IP-адрес сервера VPN."],
+["скорост света","Скорость света в вакууме — около 299 792 км/с (примерно 300 000 км/с)."],
+["возраст земл","Земле около 4,5 миллиарда лет."],
+["почему неб голуб","Воздух сильнее рассеивает короткие волны света (синие), чем длинные (красные), поэтому днём небо кажется голубым. На закате свет проходит больший путь, и остаются красные оттенки."],
+["сколько планет","В Солнечной системе 8 планет: Меркурий, Венера, Земля, Марс, Юпитер, Сатурн, Уран, Нептун."],
+["расстояни луны","До Луны в среднем около 384 400 км."],
+["гравитац","Гравитация — притяжение между телами с массой. Она удерживает нас на Земле, а Луну — на орбите. У поверхности Земли ускорение свободного падения около 9,8 м/с²."],
+["днк","ДНК — молекула, в которой записана наследственная информация организма. Она устроена как двойная спираль из четырёх типов нуклеотидов: A, T, G, C."],
+["фотосинтез","Фотосинтез — процесс, в котором растения используют свет, воду и углекислый газ, чтобы создавать глюкозу и выделять кислород."],
+["чёрн дыр","Чёрная дыра — область пространства с такой сильной гравитацией, что из неё не может вырваться даже свет."],
+["черн дыр","Чёрная дыра — область пространства с такой сильной гравитацией, что из неё не может вырваться даже свет."],
+["большой взрыв","Большой взрыв — модель, по которой Вселенная расширяется из очень горячего и плотного состояния примерно 13,8 миллиарда лет назад."],
+["теорем пифагор","В прямоугольном треугольнике квадрат гипотенузы равен сумме квадратов катетов: a² + b² = c²."],
+["число пи","Число π ≈ 3,14159… — отношение длины окружности к её диаметру. Оно иррациональное: десятичная запись не заканчивается и не повторяется."],
+["производн","Производная показывает, как быстро меняется функция в данной точке — например, скорость как производная пути по времени."],
+["изобр телефон","Телефон запатентовал Александр Грэм Белл в 1876 году."],
+["война и мир","«Война и мир» — роман Льва Толстого, опубликованный в 1865–1869 годах."],
+["втор мирова","Вторая мировая война шла с 1 сентября 1939 года по 2 сентября 1945 года."],
+["гагарин","Юрий Гагарин — первый человек в космосе: 12 апреля 1961 года он совершил орбитальный полёт на корабле «Восток-1»."],
+["колумб","Христофор Колумб в 1492 году, плывя на запад в поисках пути в Индию, достиг островов Америки."],
+["пирамид","Великая пирамида в Гизе построена около 2560 года до н. э. как гробница фараона Хеопса."],
+["самая высок гор","Самая высокая гора над уровнем моря — Эверест (Джомолунгма), около 8 849 м."],
+["самая длинн рек","Самой длинной рекой обычно называют Нил (около 6 650 км); Амазонка — самая полноводная."],
+["сколько континент","Обычно выделяют 6 или 7 континентов: Евразия (или Европа и Азия отдельно), Африка, Северная Америка, Южная Америка, Австралия, Антарктида."],
+["самый больш океан","Самый большой океан — Тихий."],
+["выучит английск","Что помогает: занимайтесь понемногу каждый день (20–30 минут), слушайте и смотрите контент с субтитрами, повторяйте слова через карточки, говорите вслух и не бойтесь ошибок."],
+["выучит программир","Выберите один язык (Python или JavaScript), проходите уроки и сразу пишите свои маленькие проекты: калькулятор, список дел, бот. Практика важнее теории."],
+["похуде","Общие принципы: небольшой дефицит калорий, больше белка и овощей, ежедневная ходьба, достаточный сон и без жёстких диет. При проблемах со здоровьем лучше проконсультироваться с врачом."],
+["заснут","Для сна помогают: стабильный режим, прохладная тёмная комната, отказ от экранов и кофеина за несколько часов до сна, лёгкий ужин. Если бессонница долго не проходит, обратитесь к врачу."],
+["улучшит сон","Для сна помогают: стабильный режим, прохладная тёмная комната, отказ от экранов и кофеина за несколько часов до сна, лёгкий ужин. Если бессонница долго не проходит, обратитесь к врачу."],
+["стресс","Помогают: глубокое дыхание (вдох на 4 счёта, выдох на 6), прогулка, спорт, сон, разговор с близкими и разбивка задач на маленькие шаги. Если стресс сильный и долгий, поговорите со специалистом."],
+["резюме","Хорошее резюме: 1 страница, контакты, краткое описание, опыт с конкретными результатами (цифры), навыки, образование. Подгоняйте его под каждую вакансию."],
+["собеседован","Подготовьтесь: изучите компанию, расскажите о себе за 1–2 минуты, приготовьте примеры своих достижений и пару вопросов к работодателю."],
+["начат бегат","Начните с чередования бега и ходьбы (например, 1 минута бега и 2 минуты ходьбы), 3 раза в неделю, постепенно увеличивая нагрузку. Нужна удобная обувь и разминка."],
+["медитир","Сядьте удобно, закройте глаза и 5 минут следите за дыханием. Когда мысли отвлекают, мягко возвращайте внимание к дыханию."],
+["заработат","Варианты: работа по найму, фриланс (программирование, дизайн, тексты, перевод), репетиторство, продажа своих товаров или услуг. Начните с того, что у вас уже получается."],
+["продуктивн","Выберите 1–3 главные задачи на день, работайте блоками по 25–50 минут с перерывами, уберите уведомления и начинайте со сложного."],
+["память","Для памяти помогают: сон, повторение с интервалами, ассоциации и образы, объяснение материала вслух, физическая активность."],
+["омлет","Омлет: взбейте 2–3 яйца с щепоткой соли и 2 ст. ложками молока, вылейте на разогретую сковороду с маслом, готовьте под крышкой на среднем огне 3–5 минут."],
+["борщ","Борщ: сварите мясной бульон, добавьте картофель, затем пассерованные свёклу, морковь и лук, капусту и томатную пасту. Варите до готовности, в конце добавьте чеснок и зелень, подавайте со сметаной."],
+["плов","Плов: обжарьте мясо с луком и морковью в казане, добавьте специи (зира, барбарис), залейте водой, посолите, сверху положите промытый рис и готовьте под крышкой до готовности."],
+["блин","Блины: смешайте 2 яйца, 500 мл молока, 200 г муки, щепотку соли, 1 ст. ложку сахара и 2 ст. ложки масла. Дайте тесту постоять 15 минут и жарьте на горячей сковороде."],
+["стих",["Утро входит тихо в дом,\nСолнце гладит подоконник.\nДень начнётся с пустяков,\nА закончится как сказка.","Ветер шепчет у окна\nО далёких, добрых странах.\nГде-то там цветёт весна,\nГде-то ждёт тебя удача.","Строчка к строчке, код и свет,\nПишет ночью программист.\nК утру ошибок больше нет,\nИ рассвет такой лучистый."]],
+["идею",["Идея: сделайте сайт-трекер привычек с отметками по дням и графиком прогресса.","Идея: мини-игра «Угадай число» с подсказками и рейтингом.","Идея: сайт-визитка с вашими проектами, навыками и формой обратной связи.","Идея: приложение для списка покупок, которое делится на категории."]],
+["мотивац",["Маленький шаг каждый день лучше, чем большой рывок раз в месяц.","Не нужно быть идеальным, чтобы начать. Нужно начать, чтобы стать лучше.","Сделайте сегодня то, за что завтра скажете себе спасибо."]]
+];
+function kb(s){
+ for(const k in CAP){if(/столиц/.test(s)&&s.includes(k))return "Столица — "+CAP[k]+"."}
+ let best=null,bs=0;
+ for(const [keys,ans] of KB){const ks=keys.split(" ");let n=0;for(const x of ks){if(s.includes(x))n++}
+  if(n===ks.length&&n>bs){bs=n;best=ans}}
+ return best?(Array.isArray(best)?pick(best):best):null}
+function reply(t){
+ const s=t.toLowerCase().trim();
+ const c=calc(s);if(c!==null)return 'Ответ: '+c;
+ const g=s.match(/^(загугли|погугли|найди в гугле|найди в google|поищи в гугле|гугл|google)\s+(.+)/);if(g){gq=t.trim().slice(t.trim().length-g[2].length);return 'Открываю поиск. Нажмите на ссылку ниже.'}
+ const k=kb(s);if(k)return k;
+ let m=s.match(/меня зовут\s+([а-яёa-z\-]+)/i);if(m){me=m[1][0].toUpperCase()+m[1].slice(1);return 'Приятно познакомиться, '+me+'!'}
+ if(/^(привет|здравств|добр(ый|ое)|хай|hello|hi)/.test(s))return pick(['Привет, '+me+'! Чем помочь?','Здравствуйте! Что вас интересует?','Привет! Я на связи.']);
+ if(/как дела|как ты|как жизнь/.test(s))return pick(['Отлично — я же просто код, мне не на что жаловаться. А у вас?','Всё хорошо, работаю без перебоев!']);
+ if(/как меня зовут|мо[её] имя/.test(s))return 'Вас зовут '+me+'.';
+ if(/кто ты|что ты|как тебя зовут|твое имя|твоё имя/.test(s))return 'Я чат-ассистент в одном HTML-файле: простые вопросы решаю по своим правилам, а на остальные отвечает подключённый ИИ (Claude).';
+ if(/что умеешь|помощь|help|что можешь/.test(s))return 'Умею:\n• считать примеры (например, 12*(3+4))\n• говорить время и дату\n• рассказывать шутки и факты\n• запоминать имя («меня зовут …»)\n• подбрасывать монетку и кубик\n• искать в Google (напишите «загугли …»)\n• отвечать на популярные вопросы: наука, программирование, история, столицы, советы, рецепты, стихи и идеи';
+ if(/врем|час(ов|ы)? сейчас|который час/.test(s))return 'Сейчас '+new Date().toLocaleTimeString('ru-RU');
+ if(/дата|число|сегодня|день недели/.test(s))return 'Сегодня '+new Date().toLocaleDateString('ru-RU',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+ if(/шутк|анекдот|пошути|рассмеши/.test(s))return pick(jokes);
+ if(/факт|интересн/.test(s))return pick(facts);
+ if(/монет|орел|орёл|решка/.test(s))return pick(['Орёл','Решка']);
+ if(/кубик|кости/.test(s))return 'Выпало: '+(1+Math.floor(Math.random()*6));
+ if(/спасибо|благодар/.test(s))return pick(['Пожалуйста!','Рад помочь!','Обращайтесь!']);
+ if(/пока|до свидания|удачи/.test(s))return 'До встречи, '+me+'!';
+ if(/погод/.test(s))return 'У меня нет доступа к интернету, поэтому погоду я не узнаю. Зато могу посчитать или рассказать шутку.';
+ if(/люблю|нравишься/.test(s))return 'Спасибо, это приятно слышать!';
+ miss=true;if(s.endsWith('?'))return pick(['Хороший вопрос! Но моих правил не хватает для точного ответа. Попробуйте написать «помощь».','Я простая локальная программа и на это ответить не могу. Напишите «помощь», чтобы узнать, что я умею.']);
+ return pick(['Интересно! Расскажите подробнее.','Понял вас. Напишите «помощь», чтобы увидеть мои команды.','Я пока не знаю, что на это ответить, но учусь… точнее, не учусь, я просто набор правил.']);
+}
+async function send(txt){txt=(txt||$('inp').value).trim();if(!txt)return;add('me',txt);$('inp').value='';
+ const typing=document.createElement('div');typing.className='m ai typing';typing.innerHTML='<i></i><i></i><i></i>';$('msgs').appendChild(typing);$('msgs').scrollTop=1e9;
+ function typeOut(el,text,done){const fast=matchMedia('(prefers-reduced-motion: reduce)').matches;if(fast){el.textContent=text;done&&done();return}let i=0;const step=Math.max(1,Math.ceil(text.length/110));const t=setInterval(()=>{i=Math.min(text.length,i+step);el.textContent=text.slice(0,i);$('msgs').scrollTop=1e9;if(i>=text.length){clearInterval(t);done&&done()}},18)}
+ setTimeout(async()=>{miss=false;gq=null;const r=reply(txt);let ai=null;
+ if(miss&&!gq)ai=await askAI(txt,typing);
+ const q=gq||(miss?txt:null),ans=ai||r;
+ hist.push({role:'user',content:txt},{role:'assistant',content:ans});if(hist.length>12)hist.splice(0,2);
+ if(ai){if(q)addLink(q);$('msgs').scrollTop=1e9;return}
+ typing.classList.remove('typing');typing.textContent='';
+ typeOut(typing,r,()=>{if(q)addLink(q);$('msgs').scrollTop=1e9})},350+Math.random()*450);}
+$('send').onclick=()=>send();
+$('inp').addEventListener('keydown',e=>{if(e.key==='Enter')send()});
+['Помощь','Что такое Python?','Столица Японии','Как выучить английский?','Напиши стих','25*4+10','Загугли курс доллара'].forEach(c=>{const b=document.createElement('button');b.textContent=c;b.onclick=()=>send(c);$('chips').appendChild(b)});
+
+(function(){const e=store('session'),u=e&&getUsers()[e];if(u)enter(e,u.name)})();
+</script>
+</body>
+</html>
